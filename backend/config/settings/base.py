@@ -51,7 +51,8 @@ INSTALLED_APPS = [
 
     "rest_framework",
 
-      "apps.identity.apps.IdentityConfig",
+    "apps.identity",
+    "apps.health",
 ]
 
 MIDDLEWARE = [
