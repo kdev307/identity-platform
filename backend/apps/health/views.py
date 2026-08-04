@@ -1,6 +1,7 @@
 from django.db import connection
-from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from apps.common.api.responses import success_response
 
 
 class HealthCheckView(APIView):
@@ -8,7 +9,7 @@ class HealthCheckView(APIView):
     permission_classes = [] 
 
     def get(self, request):
-        return Response(
+        return success_response(
             {
                 "status": "ok",
             }
@@ -24,7 +25,7 @@ class ReadinessCheckView(APIView):
 
         is_ready = database_status == "ok"
 
-        return Response(
+        return success_response(
             {
                 "status": "ok" if is_ready else "unavailable",
                 "services": {
