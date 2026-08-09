@@ -32,6 +32,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+  
+  redis-insight:
+    image: redis/redisinsight:latest
+    container_name: isp-redis-insight
+    restart: unless-stopped
+    ports:
+      - "5540:5540"
+    depends_on:
+      - redis
 
   mailpit:
     image: axllent/mailpit:latest
