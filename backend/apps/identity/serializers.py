@@ -1,10 +1,16 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from .exceptions import EmailAlreadyExistsError
 
 from .models import User
 
 
 class RegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        required=True,
+        validators=[],
+    )
+     
     password = serializers.CharField(
         write_only=True,
         required=True,
@@ -28,7 +34,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
 
     def validate_email(self, value):
-        return value.strip().lower()
+        email = value.strip().lower()
+
+        if User.objects.filter(email=email).exists():
+            raise EmailAlreadyExistsError()
+
+        return email
 
     def validate_password(self, value):
         validate_password(value)
