@@ -17,11 +17,21 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+# API Endpoints
+
 urlpatterns = [
+    # Django Admin Panel
     path('admin/', admin.site.urls),
 
+    # Health Check
      path(
         "api/v1/health/",
         include("apps.health.urls"),
+    ),
+
+    # Identity
+    path(
+        "api/v1/auth/",
+        include("apps.identity.urls"),
     ),
 ]
