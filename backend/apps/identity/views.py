@@ -5,7 +5,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.common.api.responses import success_response
 
-from .serializers import LoginSerializer, RegisterSerializer
+from .serializers import LoginSerializer, RegisterSerializer, RefreshSerializer
 
 
 class RegisterView(APIView):
@@ -66,6 +66,24 @@ class MeView(APIView):
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+class RefreshView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = RefreshSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+
+        return success_response(
+            data={
+                "access_token": serializer.validated_data["access"],
+                "refresh_token": serializer.validated_data.get("refresh"),
+                "token_type": "Bearer",
             },
             status=status.HTTP_200_OK,
         )

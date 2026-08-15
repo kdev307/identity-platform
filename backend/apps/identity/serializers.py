@@ -1,6 +1,9 @@
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import authenticate
+
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+
 from .exceptions import EmailAlreadyExistsError
 
 from .models import User
@@ -101,3 +104,15 @@ class LoginSerializer(serializers.Serializer):
         attrs["user"] = user
 
         return attrs
+
+
+class RefreshSerializer(TokenRefreshSerializer):
+    """
+    Custom refresh serializer.
+
+    Delegates JWT validation and refresh-token rotation
+    to Simple JWT while allowing the ISP API layer to
+    control how the endpoint is exposed.
+    """
+
+    pass

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import RegisterView, LoginView, MeView
+from .views import RegisterView, LoginView, MeView, RefreshView
 
 
 urlpatterns = [
@@ -21,5 +21,12 @@ urlpatterns = [
         "me/",
         MeView.as_view(),
         name="me",
+    ),
+
+    # Refresh Token
+      path(
+        "refresh/",
+        RefreshView.as_view(),
+        name="refresh",
     ),
 ]
