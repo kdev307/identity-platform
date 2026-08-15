@@ -55,3 +55,17 @@ class LoginView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+class MeView(APIView):
+    def get(self, request):
+        user = request.user
+
+        return success_response(
+            data={
+                "id": str(user.id),
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+            },
+            status=status.HTTP_200_OK,
+        )
