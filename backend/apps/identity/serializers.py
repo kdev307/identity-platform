@@ -1,4 +1,5 @@
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth import authenticate
 from rest_framework import serializers
 from .exceptions import EmailAlreadyExistsError
 
@@ -61,3 +62,42 @@ class RegisterSerializer(serializers.ModelSerializer):
         return User.objects.create_user(
             **validated_data,
         )
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(
+        required=True,
+    )
+
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        trim_whitespace=False,
+    )
+
+    def validate(self, attrs):
+        email = attrs["email"].strip().lower()
+        password = attrs["password"]
+
+        user = authenticate(
+            request=self.context.get("request"),
+            username=email,
+            password=password,
+        )
+
+        if user is None:
+            raise serializers.ValidationError(
+                {
+                    "credentials": "Invalid email or password.",
+                }
+            )
+
+        if not user.is_active:
+            raise serializers.ValidationError(
+                {
+                    "credentials": "User account is inactive.",
+                }
+            )
+
+        attrs["user"] = user
+
+        return attrs
