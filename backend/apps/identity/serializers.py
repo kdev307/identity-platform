@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate
 
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .exceptions import EmailAlreadyExistsError
 
@@ -116,3 +118,39 @@ class RefreshSerializer(TokenRefreshSerializer):
     """
 
     pass
+
+class LogoutSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField(
+        write_only=True,
+        required=True,
+        trim_whitespace=False,
+    )
+
+    def validate(self, attrs):
+        try:
+            refresh = RefreshToken(attrs["refresh_token"])
+            attrs["refresh"] = refresh
+
+        except TokenError:
+            raise serializers.ValidationError(
+                {
+                    "refresh_token": "Invalid or expired refresh token.",
+                }
+            )
+
+        return attrs
+
+
+    def save(self, **kwargs):
+        refresh = self.validated_data["refresh"]
+
+        try:
+            refresh.blacklist()
+        except AttributeError:
+            raise serializers.ValidationError(
+                {
+                    "refresh_token": "Token blacklisting is not available.",
+                }
+            )
+
+        return None
