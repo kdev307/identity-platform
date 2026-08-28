@@ -52,6 +52,7 @@ INSTALLED_APPS = [
 
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
+    "drf_spectacular",
 
     "apps.identity",
     "apps.health",
@@ -152,6 +153,7 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": (
         "apps.common.api.exception_handler.isp_exception_handler"
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SIMPLE_JWT = {
@@ -162,4 +164,10 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
 
     "UPDATE_LAST_LOGIN": False,
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "ISP API",
+    "DESCRIPTION": "API documentation",
+    "VERSION": "1.0.0",
 }
