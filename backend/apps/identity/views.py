@@ -1,3 +1,111 @@
-from django.shortcuts import render
+from rest_framework import status
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
-# Create your views here.
+from apps.common.api.responses import success_response
+
+from .serializers import (
+    LoginSerializer,
+    LogoutSerializer,
+    RefreshSerializer,
+    RegisterSerializer,
+)
+
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.save()
+
+        return success_response(
+            data={
+                "id": str(user.id),
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = LoginSerializer(
+            data=request.data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.validated_data["user"]
+
+        refresh = RefreshToken.for_user(user)
+
+        return success_response(
+            data={
+                "access_token": str(refresh.access_token),
+                "refresh_token": str(refresh),
+                "token_type": "Bearer",
+                "user":{
+                    "id": str(user.id),
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
+
+class MeView(APIView):
+    def get(self, request):
+        user = request.user
+
+        return success_response(
+            data={
+                "id": str(user.id),
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+class RefreshView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = RefreshSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+
+        return success_response(
+            data={
+                "access_token": serializer.validated_data["access"],
+                "refresh_token": serializer.validated_data.get("refresh"),
+                "token_type": "Bearer",
+            },
+            status=status.HTTP_200_OK,
+        )
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = LogoutSerializer(
+            data=request.data,
+        )
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return success_response(
+            data={
+                "message": "Logout successful.",
+            },
+            status=status.HTTP_200_OK,
+        )

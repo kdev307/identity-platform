@@ -11,7 +11,7 @@ def success_response(
         {
             "data": data,
             "error": None,
-            "meta": meta or {},
+            "meta": {} if meta is None else meta,
         },
         status=status,
     )
