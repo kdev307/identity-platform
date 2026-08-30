@@ -6,7 +6,11 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .exceptions import EmailAlreadyExistsError
+from .exceptions import (
+    EmailAlreadyExistsError,
+    InvalidCredentialsError,
+    InvalidRefreshTokenError
+)
 
 from .models import User
 
@@ -89,35 +93,41 @@ class LoginSerializer(serializers.Serializer):
             password=password,
         )
 
-        if user is None:
-            raise serializers.ValidationError(
-                {
-                    "credentials": "Invalid email or password.",
-                }
-            )
-
-        if not user.is_active:
-            raise serializers.ValidationError(
-                {
-                    "credentials": "User account is inactive.",
-                }
-            )
+        if user is None or not user.is_active:
+            raise InvalidCredentialsError()
 
         attrs["user"] = user
 
         return attrs
 
 
-class RefreshSerializer(TokenRefreshSerializer):
+class RefreshSerializer(serializers.Serializer):
     """
-    Custom refresh serializer.
+    Refresh token serializer for the ISP API.
 
-    Delegates JWT validation and refresh-token rotation
-    to Simple JWT while allowing the ISP API layer to
-    control how the endpoint is exposed.
+    Exposes `refresh_token` as the public API contract while
+    delegating token validation and rotation to Simple JWT.
     """
 
-    pass
+    refresh_token = serializers.CharField(
+        write_only=True,
+        required=True,
+        trim_whitespace=False,
+    )
+
+    def validate(self, attrs):
+        serializer = TokenRefreshSerializer(
+            data={
+                "refresh": attrs["refresh_token"],
+            }
+        )
+        try:
+            serializer.is_valid(raise_exception=True)
+
+        except TokenError:
+                raise InvalidRefreshTokenError()
+
+        return serializer.validated_data
 
 class LogoutSerializer(serializers.Serializer):
     refresh_token = serializers.CharField(
@@ -132,11 +142,7 @@ class LogoutSerializer(serializers.Serializer):
             attrs["refresh"] = refresh
 
         except TokenError:
-            raise serializers.ValidationError(
-                {
-                    "refresh_token": "Invalid or expired refresh token.",
-                }
-            )
+             raise InvalidRefreshTokenError()
 
         return attrs
 
